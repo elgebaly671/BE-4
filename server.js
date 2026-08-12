@@ -23,7 +23,18 @@ supabase.auth.getSession().then(({ error }) => {
     }
 })
 
+async function authenticateUser(req, res, next) {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: "Access token required" })
+        const { data, error } = await supabase.auth.getUser(token);
+        if (!data || error) return res.status(401).json({ error: "Invalid or expired token" })
+        res.locals.user = data.user
+        return next();
+    } catch (error) {
 
+    }
+}
 app.post("/auth/signup", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -75,19 +86,25 @@ app.post("/auth/login", async (req, res) => {
         })
     }
 })
-
+app.post('/auth/logout', authenticateUser, async (req,res)=>{
+    try {
+        const {error} = await supabase.auth.signOut()
+        if(error){
+            return res.json({error: error.message})
+        }
+        res.sendStatus(204)
+    } catch (error) {
+        
+    }
+})
 app.get('/public/info', (req, res) => {
     return res.json({
         message: "Welcome stranger! This info is public."
     })
 })
-app.get("/protected/profile", async (req, res) => {
+app.get("/protected/profile", authenticateUser,async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) return res.status(401).json({ error: "Access token required" })
-        const { data, error } = await supabase.auth.getUser(token);
-        if (!data || error) return res.status(401).json({ error: "Invalid or expired token" })
-        const {user} = data
+        const { user } = res.locals
         return res.status(200).json({
             email: user.email,
             id: user.id,
