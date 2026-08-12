@@ -1,18 +1,22 @@
 const express = require('express')
 const dotenv = require('dotenv')
 const cors = require('cors')
+const swaggerUi = require('swagger-ui-express')
+const swaggerDocument = require('./openapi.json')
 dotenv.config()
 
 
 const app = express()
-const port = process.env.PORT
+const port = process.env.PORT || 3000
 
 const { createClient } = require('@supabase/supabase-js')
 
 app.use(cors());
 app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY)
+const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_kEY
+const supabase = createClient(process.env.SUPABASE_URL, supabaseKey)
 
 // Verify Supabase connection
 supabase.auth.getSession().then(({ error }) => {
@@ -92,7 +96,9 @@ app.post('/auth/logout', authenticateUser, async (req,res)=>{
         if(error){
             return res.json({error: error.message})
         }
-        res.sendStatus(204)
+        res.sendStatus(204
+            
+        )
     } catch (error) {
         
     }
