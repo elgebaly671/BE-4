@@ -84,14 +84,8 @@ app.get('/public/info', (req, res) => {
 app.get("/protected/profile", async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        const { data, error } = await supabase.auth.getUser(token);
-        if (error || !data.user) return res.status(401).json({ error: "Access token required" })
-
-        return res.status(200).json({
-            id: data.user.id,
-            email: data.user.email,
-            created_At: data.user.created_at
-        })
+        
+        if (!token) return res.status(401).json({ error: "Access token required" })
     } catch (error) {
         res.json({ error: error.message })
     }
